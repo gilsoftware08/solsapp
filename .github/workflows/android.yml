@@ -14,12 +14,12 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
-      
+          java-version: '21' # <--- Updated from 17 to 21
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22' # <--- This fixes your current error
+          node-version: '22'
 
       - name: Install Dependencies
         run: npm install
