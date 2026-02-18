@@ -4,25 +4,26 @@ import * as faceapi from "face-api.js";
 import { useRouter } from "next/navigation";
 import { getStorage, setStorage } from "@/lib/dataStore";
 import Header from "@/components/Header";
+import { getModelBasePath } from "@/lib/faceModels";
 
 export default function FacultySession() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const [isVerified, setIsVerified] = useState(false);
-  const [status, setStatus] = useState("Initializing...");
+  const [status, setStatus] = useState("Tap to open camera and verify.");
   const [timer, setTimer] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
     const loadAIAndCamera = async () => {
       try {
-        const MODEL_URL = "/models";
+        const MODEL_URL = getModelBasePath();
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
           faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
           faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         ]);
-        await startCamera();
+        setStatus("Tap the video area to open camera.");
       } catch (error) {
         setStatus("Error loading AI models. Check /models folder.");
       }
@@ -39,10 +40,20 @@ export default function FacultySession() {
 
   // Timer
   useEffect(() => {
-    let interval: any;
-    if (isVerified) interval = setInterval(() => setTimer(t => t + 1), 1000);
+    const sessionStart = localStorage.getItem("sessionStartTime");
+    if (!sessionStart) {
+      setTimer(0);
+      return;
+    }
+    const startMs = parseInt(sessionStart, 10);
+    const update = () => {
+      const diffSec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+      setTimer(diffSec);
+    };
+    update();
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
-  }, [isVerified]);
+  }, []);
 
   const startCamera = async () => {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -63,7 +74,7 @@ export default function FacultySession() {
             ?.play()
             .catch(() => setStatus("Tap to allow camera playback."));
         };
-        setStatus("Align face to verify");
+        setStatus("Align face to verify, then press VERIFY.");
       }
     } catch (error: any) {
       let message = "Unable to access camera.";
@@ -89,7 +100,19 @@ export default function FacultySession() {
         const distance = faceapi.euclideanDistance(detect.descriptor, myData.descriptor);
         if (distance < 0.6) {
           setIsVerified(true);
-          setStatus("Verified! Session Active.");
+          // set or keep session start time
+          if (!localStorage.getItem("sessionStartTime")) {
+            localStorage.setItem("sessionStartTime", Date.now().toString());
+          }
+          setStatus("Verified! Camera will turn off to save battery.");
+          // stop camera after verify
+          if (streamRef.current) {
+            streamRef.current.getTracks().forEach((t) => t.stop());
+            streamRef.current = null;
+          }
+          if (videoRef.current) {
+            (videoRef.current as any).srcObject = null;
+          }
         } else {
           setStatus("Face Mismatch! ❌");
         }
@@ -111,6 +134,7 @@ export default function FacultySession() {
       studentsPresent: "See Details" 
     });
     setStorage("attendance_history", history);
+    localStorage.removeItem("sessionStartTime");
     router.push("/faculty/dashboard");
   };
 
@@ -132,15 +156,21 @@ export default function FacultySession() {
 
         <div className="flex-1 flex flex-col gap-4 sm:gap-6">
           <div className="relative overflow-hidden rounded-3xl border-2 border-slate-800 bg-black">
-            <video
-              ref={videoRef}
-              autoPlay
-              muted
-              playsInline
-              controls={false}
-              className={`w-full h-64 sm:h-80 object-cover ${isVerified ? "opacity-50 grayscale" : ""}`}
-              onClick={() => !isVerified && startCamera()}
-            />
+            {isVerified ? (
+              <div className="w-full h-64 sm:h-80 flex items-center justify-center text-slate-500 text-sm sm:text-base">
+                <span>Camera off during session to save battery.</span>
+              </div>
+            ) : (
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                controls={false}
+                className="w-full h-64 sm:h-80 object-cover"
+                onClick={startCamera}
+              />
+            )}
             <div className="absolute bottom-4 left-0 right-0 text-center px-2">
               <span
                 className={`inline-block px-4 py-1 rounded-full text-[11px] sm:text-xs font-bold ${

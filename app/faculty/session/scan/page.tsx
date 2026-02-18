@@ -4,6 +4,7 @@ import * as faceapi from "face-api.js";
 import { useRouter } from "next/navigation";
 import { getStorage } from "@/lib/dataStore";
 import Header from "@/components/Header";
+import { getModelBasePath } from "@/lib/faceModels";
 
 export default function StudentScanner() {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -13,21 +14,21 @@ export default function StudentScanner() {
   const router = useRouter();
 
   useEffect(() => {
-    const loadAIAndCamera = async () => {
+    const loadAI = async () => {
       try {
-        const MODEL_URL = "/models";
+        const MODEL_URL = getModelBasePath();
         await Promise.all([
           faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
           faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
           faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         ]);
-        await startCamera();
+        setStatus("Tap camera to start scanning.");
       } catch (error) {
         setStatus("Error loading AI models. Check /models folder.");
       }
     };
 
-    loadAIAndCamera();
+    loadAI();
 
     return () => {
       if (streamRef.current) {

@@ -8,17 +8,51 @@ export default function CreateFacultyLogin() {
   const [selectedFac, setSelectedFac] = useState("");
   const [id, setId] = useState("");
   const [pass, setPass] = useState("");
+  const [logins, setLogins] = useState<any[]>([]);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [editId, setEditId] = useState("");
+  const [editPass, setEditPass] = useState("");
 
-  useEffect(() => setFacultyList(getStorage("faculty")), []);
+  useEffect(() => {
+    setFacultyList(getStorage("faculty"));
+    setLogins(getStorage("faculty_logins"));
+  }, []);
 
   const saveLogin = () => {
     if (!selectedFac || !id || !pass) return alert("All fields are required!");
-    const logins = getStorage("faculty_logins");
-    logins.push({ facultyName: selectedFac, id, pass });
-    setStorage("faculty_logins", logins);
+    const next = [...logins, { facultyName: selectedFac, id, pass }];
+    setLogins(next);
+    setStorage("faculty_logins", next);
     alert(`Login credentials created for ${selectedFac}`);
     setId("");
     setPass("");
+  };
+
+  const startEdit = (index: number) => {
+    const row = logins[index];
+    setEditingIndex(index);
+    setEditId(row.id);
+    setEditPass(row.pass);
+  };
+
+  const cancelEdit = () => {
+    setEditingIndex(null);
+    setEditId("");
+    setEditPass("");
+  };
+
+  const saveEdit = () => {
+    if (editingIndex === null) return;
+    if (!editId || !editPass) {
+      alert("ID and Password cannot be empty.");
+      return;
+    }
+    const updated = logins.map((row, i) =>
+      i === editingIndex ? { ...row, id: editId, pass: editPass } : row
+    );
+    setLogins(updated);
+    setStorage("faculty_logins", updated);
+    cancelEdit();
   };
 
   return (
@@ -68,6 +102,95 @@ export default function CreateFacultyLogin() {
             <span className="text-xl">💾</span>
             SAVE CREDENTIALS
           </button>
+        </div>
+
+        {/* Existing credentials table */}
+        <div className="mt-6">
+          <h3 className="app-subtitle mb-3 sm:mb-4">
+            Existing Credentials ({logins.length})
+          </h3>
+
+          {logins.length === 0 ? (
+            <p className="text-slate-500 text-sm">No credentials created yet.</p>
+          ) : (
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {logins.map((row, index) => {
+                const isEditing = editingIndex === index;
+                return (
+                  <div
+                    key={`${row.facultyName}-${row.id}-${index}`}
+                    className="glass-card p-4 sm:p-5 flex flex-col gap-3"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-black text-sm sm:text-base">
+                        {row.facultyName}
+                      </p>
+                      {!isEditing && (
+                        <button
+                          type="button"
+                          onClick={() => startEdit(index)}
+                          className="btn-ghost !w-auto px-3 py-1 text-xs sm:text-sm"
+                        >
+                          Edit
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="app-label">User ID</label>
+                        {isEditing ? (
+                          <input
+                            className="app-input text-sm"
+                            value={editId}
+                            onChange={(e) => setEditId(e.target.value)}
+                          />
+                        ) : (
+                          <p className="text-slate-200 text-sm break-all">
+                            {row.id}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="app-label">Password</label>
+                        {isEditing ? (
+                          <input
+                            className="app-input text-sm"
+                            value={editPass}
+                            type="text"
+                            onChange={(e) => setEditPass(e.target.value)}
+                          />
+                        ) : (
+                          <p className="text-slate-200 text-sm">
+                            {"*".repeat(Math.max(4, row.pass.length))}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {isEditing && (
+                      <div className="flex gap-3 justify-end">
+                        <button
+                          type="button"
+                          onClick={cancelEdit}
+                          className="btn-ghost !w-auto px-3 py-2 text-xs sm:text-sm"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={saveEdit}
+                          className="btn neon-btn bg-pink-600 text-white !w-auto px-4 py-2 text-xs sm:text-sm"
+                        >
+                          Save
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>

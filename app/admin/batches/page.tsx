@@ -57,11 +57,13 @@ export default function CreateBatch() {
               value={selectedCourse}
             >
               <option value="">-- Choose Course --</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.name}>
-                  {c.name}
-                </option>
-              ))}
+              {courses
+                .filter((c: any) => c.active !== false)
+                .map((c: any) => (
+                  <option key={c.id} value={c.name}>
+                    {c.name}
+                  </option>
+                ))}
             </select>
           </div>
 
@@ -88,6 +90,46 @@ export default function CreateBatch() {
             <span className="text-xl">＋</span>
             CREATE BATCH
           </button>
+        </div>
+
+        {/* List of existing batches */}
+        <h3 className="app-subtitle mt-6 mb-3 sm:mb-4">Existing Batches</h3>
+        <div className="space-y-3">
+          {getStorage("batches").length === 0 ? (
+            <p className="text-slate-500 text-sm">No batches created yet.</p>
+          ) : (
+            getStorage("batches").map((b: any, idx: number) => (
+              <div
+                key={`${b.name}-${idx}`}
+                className="glass-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+              >
+                <div>
+                  <p className="font-black text-base sm:text-lg">{b.name}</p>
+                  <p className="text-xs sm:text-sm text-slate-400 mt-1">
+                    Course: <span className="text-emerald-300">{b.courseName}</span>
+                  </p>
+                  <p className="text-xs sm:text-sm text-slate-400">
+                    Faculty: <span className="text-sky-300">{b.facultyName}</span>
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const all = getStorage("batches");
+                    const filtered = all.filter(
+                      (x: any, i: number) =>
+                        !(x.name === b.name && x.courseName === b.courseName && i === idx)
+                    );
+                    setStorage("batches", filtered);
+                    alert("Batch deleted.");
+                  }}
+                  className="btn-ghost !w-auto px-4 border-red-900/60 text-red-300"
+                >
+                  Delete
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
