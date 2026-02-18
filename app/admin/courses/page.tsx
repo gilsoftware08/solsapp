@@ -18,32 +18,42 @@ export default function AddCourse() {
   };
 
   return (
-    <div className="p-6 min-h-screen max-w-2xl mx-auto">
+    <div className="app-page">
+      <div className="app-container">
       <Header title="Manage Courses" />
 
-      <div className="glass-card p-6 mb-8">
-        <label className="text-sm text-slate-400 uppercase font-bold tracking-wider mb-2 block">New Course Name</label>
-        <div className="flex flex-col gap-4">
+      <div className="app-card mb-6 sm:mb-8">
+        <label className="app-label">New Course Name</label>
+        <div className="flex flex-col gap-3 sm:gap-4">
           <input 
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             placeholder="e.g. Python Programming"
-            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg focus:border-blue-500 focus:outline-none transition-colors"
+            className="app-input"
           />
-          <button onClick={addCourse} className="w-full bg-blue-600 p-4 rounded-xl font-bold text-lg neon-btn tracking-wide">
-            + ADD COURSE
+          <button onClick={addCourse} className="btn-primary neon-btn">
+            <span className="text-xl">＋</span>
+            ADD COURSE
           </button>
         </div>
       </div>
 
-      <h3 className="text-slate-500 font-bold mb-4 uppercase text-sm">Active Courses ({courses.length})</h3>
+      <h3 className="app-subtitle mb-3 sm:mb-4">
+        Active Courses ({courses.length})
+      </h3>
       <div className="grid gap-3">
         {courses.map(c => (
-          <div key={c.id} className="glass-card p-5 flex justify-between items-center border-l-4 border-blue-500">
-            <span className="font-bold text-lg">{c.name}</span>
-            <span className="bg-blue-500/20 text-blue-300 text-xs px-3 py-1 rounded-full">Active</span>
+          <div
+            key={c.id}
+            className="glass-card p-5 sm:p-6 flex justify-between items-center border-l-4 border-blue-500"
+          >
+            <span className="font-black text-base sm:text-lg">{c.name}</span>
+            <span className="bg-blue-500/20 text-blue-200 text-[11px] sm:text-xs px-3 py-1 rounded-full font-black">
+              Active
+            </span>
           </div>
         ))}
+      </div>
       </div>
     </div>
   );

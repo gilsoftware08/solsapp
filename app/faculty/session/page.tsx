@@ -7,19 +7,34 @@ import Header from "@/components/Header";
 
 export default function FacultySession() {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
   const [isVerified, setIsVerified] = useState(false);
   const [status, setStatus] = useState("Initializing...");
   const [timer, setTimer] = useState(0);
   const router = useRouter();
 
   useEffect(() => {
-    const loadAI = async () => {
-      await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-      await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-      await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-      startCamera();
+    const loadAIAndCamera = async () => {
+      try {
+        const MODEL_URL = "/models";
+        await Promise.all([
+          faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+          faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+          faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
+        ]);
+        await startCamera();
+      } catch (error) {
+        setStatus("Error loading AI models. Check /models folder.");
+      }
     };
-    loadAI();
+
+    loadAIAndCamera();
+
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach((track) => track.stop());
+      }
+    };
   }, []);
 
   // Timer
@@ -30,14 +45,34 @@ export default function FacultySession() {
   }, [isVerified]);
 
   const startCamera = async () => {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      setStatus("Camera not supported in this environment.");
+      return;
+    }
+
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "user" },
+      });
+      streamRef.current = stream;
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.onloadedmetadata = () => {
+          videoRef.current
+            ?.play()
+            .catch(() => setStatus("Tap to allow camera playback."));
+        };
         setStatus("Align face to verify");
       }
-    } catch (e) {
-      setStatus("Camera Access Denied");
+    } catch (error: any) {
+      let message = "Unable to access camera.";
+      if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
+        message = "Camera permission denied. Enable it in app settings.";
+      } else if (error?.name === "NotFoundError") {
+        message = "No camera device found.";
+      }
+      setStatus(message);
     }
   };
 
@@ -86,47 +121,66 @@ export default function FacultySession() {
   };
 
   return (
-    <div className="p-6 min-h-screen max-w-2xl mx-auto flex flex-col">
-      <div className="flex justify-between items-center mb-6">
-        <Header title="Live Session" />
-        <span className="bg-slate-800 px-4 py-2 rounded-lg font-mono text-xl text-blue-400 border border-slate-700">
-          {formatTime(timer)}
-        </span>
-      </div>
-
-      <div className="flex-1 flex flex-col gap-6">
-        <div className="relative overflow-hidden rounded-3xl border-2 border-slate-700 bg-black">
-          <video 
-            ref={videoRef} 
-            autoPlay 
-            muted 
-            playsInline // CRITICAL for Mobile
-            className={`w-full h-80 object-cover ${isVerified ? 'opacity-50 grayscale' : ''}`} 
-          />
-          <div className="absolute bottom-4 left-0 right-0 text-center">
-            <span className={`px-4 py-1 rounded-full text-xs font-bold ${isVerified ? 'bg-green-500/20 text-green-400' : 'bg-red-500/20 text-red-400'}`}>
-              {status}
-            </span>
-          </div>
+    <div className="app-page">
+      <div className="app-container flex flex-col">
+        <div className="flex justify-between items-center mb-2 sm:mb-4">
+          <Header title="Live Session" />
+          <span className="glass-card px-4 py-2 rounded-2xl font-mono text-lg sm:text-2xl text-blue-200 border border-slate-700">
+            {formatTime(timer)}
+          </span>
         </div>
 
-        {!isVerified ? (
-          <button onClick={verifyFaculty} className="w-full bg-blue-600 p-5 rounded-xl font-bold text-lg neon-btn">
-            VERIFY IDENTITY TO START
-          </button>
-        ) : (
-          <div className="space-y-3">
-            <button 
-              onClick={() => router.push("/faculty/session/scan")} 
-              className="w-full bg-emerald-600 p-5 rounded-xl font-bold text-lg neon-btn flex items-center justify-center gap-2"
-            >
-              📸 SCAN STUDENTS
-            </button>
-            <button onClick={endClass} className="w-full bg-red-900/30 text-red-400 border border-red-900 p-5 rounded-xl font-bold text-lg">
-              END SESSION
-            </button>
+        <div className="flex-1 flex flex-col gap-4 sm:gap-6">
+          <div className="relative overflow-hidden rounded-3xl border-2 border-slate-800 bg-black">
+            <video
+              ref={videoRef}
+              autoPlay
+              muted
+              playsInline
+              controls={false}
+              className={`w-full h-64 sm:h-80 object-cover ${isVerified ? "opacity-50 grayscale" : ""}`}
+              onClick={() => !isVerified && startCamera()}
+            />
+            <div className="absolute bottom-4 left-0 right-0 text-center px-2">
+              <span
+                className={`inline-block px-4 py-1 rounded-full text-[11px] sm:text-xs font-bold ${
+                  isVerified
+                    ? "bg-green-500/20 text-green-400"
+                    : "bg-red-500/20 text-red-400"
+                }`}
+              >
+                {status}
+              </span>
+            </div>
           </div>
-        )}
+
+          {!isVerified ? (
+            <button
+              onClick={verifyFaculty}
+              className="btn-primary neon-btn"
+            >
+              <span className="text-xl">🧑‍🏫</span>
+              VERIFY TO START
+            </button>
+          ) : (
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push("/faculty/session/scan")}
+                className="btn-success neon-btn"
+              >
+                <span className="text-xl">📸</span>
+                SCAN STUDENTS
+              </button>
+              <button
+                onClick={endClass}
+                className="btn-danger"
+              >
+                <span className="text-xl">⏹</span>
+                END SESSION
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

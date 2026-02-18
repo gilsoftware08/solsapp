@@ -4,11 +4,20 @@ import { useRouter } from "next/navigation";
 export default function Header({ title }: { title: string }) {
   const router = useRouter();
   return (
-    <div className="flex items-center gap-4 mb-8 pt-2">
-      <button onClick={() => router.back()} className="p-3 glass-card rounded-full text-blue-400 active:scale-90 transition-all">
-        ←
+    <div className="flex items-center gap-3 sm:gap-4 mb-4 sm:mb-6">
+      <button
+        type="button"
+        aria-label="Go back"
+        onClick={() => router.back()}
+        className="glass-card rounded-2xl px-4 py-3 min-h-12 min-w-12 text-blue-200 active:scale-[0.99] transition-transform"
+      >
+        <span className="text-xl sm:text-2xl leading-none">←</span>
       </button>
-      <h1 className="text-2xl font-black tracking-tight">{title}</h1>
+      <div className="min-w-0">
+        <h1 className="text-xl sm:text-2xl font-black tracking-tight truncate">
+          {title}
+        </h1>
+      </div>
     </div>
   );
 }

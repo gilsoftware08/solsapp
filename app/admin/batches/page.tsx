@@ -34,47 +34,61 @@ export default function CreateBatch() {
   };
 
   return (
-    <div className="p-6 min-h-screen max-w-2xl mx-auto">
-      <Header title="Batch Setup" />
+    <div className="app-page">
+      <div className="app-container">
+        <Header title="Batch Setup" />
 
-      <div className="glass-card p-6 space-y-6">
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Batch Name</label>
-          <input 
-            placeholder="e.g. Morning_Python_A" 
-            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg focus:border-emerald-500 outline-none"
-            value={batchName}
-            onChange={(e) => setBatchName(e.target.value)}
-          />
+        <div className="app-card space-y-4 sm:space-y-6">
+          <div>
+            <label className="app-label">Batch Name</label>
+            <input 
+              placeholder="e.g. Morning_Python_A" 
+              className="app-input focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              value={batchName}
+              onChange={(e) => setBatchName(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="app-label">Select Course</label>
+            <select 
+              className="app-select focus:ring-emerald-500/50 focus:border-emerald-500/50"
+              onChange={(e) => handleCourseChange(e.target.value)}
+              value={selectedCourse}
+            >
+              <option value="">-- Choose Course --</option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.name}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="app-label">Assign Faculty</label>
+            <select 
+              className="app-select focus:ring-emerald-500/50 focus:border-emerald-500/50 disabled:opacity-60"
+              value={selectedFaculty}
+              onChange={(e) => setSelectedFaculty(e.target.value)}
+              disabled={!selectedCourse}
+            >
+              <option value="">
+                {selectedCourse ? "-- Choose Faculty --" : "Select Course First"}
+              </option>
+              {filteredFaculty.map((f, i) => (
+                <option key={i} value={f.name}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <button onClick={saveBatch} className="btn-success neon-btn mt-1">
+            <span className="text-xl">＋</span>
+            CREATE BATCH
+          </button>
         </div>
-
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Select Course</label>
-          <select 
-            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg focus:border-emerald-500 outline-none appearance-none"
-            onChange={(e) => handleCourseChange(e.target.value)}
-          >
-            <option value="">-- Choose Course --</option>
-            {courses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-          </select>
-        </div>
-
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Assign Faculty</label>
-          <select 
-            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg focus:border-emerald-500 outline-none appearance-none"
-            value={selectedFaculty}
-            onChange={(e) => setSelectedFaculty(e.target.value)}
-            disabled={!selectedCourse}
-          >
-            <option value="">{selectedCourse ? "-- Choose Faculty --" : "Select Course First"}</option>
-            {filteredFaculty.map((f, i) => <option key={i} value={f.name}>{f.name}</option>)}
-          </select>
-        </div>
-
-        <button onClick={saveBatch} className="w-full bg-emerald-600 p-5 rounded-xl font-bold text-lg neon-btn mt-4">
-          CREATE BATCH
-        </button>
       </div>
     </div>
   );

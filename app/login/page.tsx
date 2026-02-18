@@ -33,47 +33,62 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6">
-      <div className="glass-card p-8 w-full max-w-sm border-t-2 border-blue-500/50 shadow-2xl shadow-blue-900/20">
-        <div className="text-center mb-10">
-          <h1 className="text-4xl font-black tracking-tighter text-white mb-2">
-            SOLS<span className="text-blue-500">APP</span>
-          </h1>
-          <p className="text-slate-500 text-xs uppercase tracking-[0.2em]">Biometric Attendance System</p>
-        </div>
+    <div className="app-page flex items-center">
+      <div className="app-container w-full">
+        <div className="mx-auto w-full max-w-md">
+          <div className="glass-card p-6 sm:p-8 border border-slate-800 shadow-2xl shadow-blue-900/20">
+            <div className="text-center mb-8 sm:mb-10">
+              <div className="inline-flex items-center justify-center mb-4">
+                <div className="h-14 w-14 sm:h-16 sm:w-16 rounded-3xl bg-blue-500/15 border border-blue-500/25 grid place-items-center">
+                  <span className="text-2xl sm:text-3xl">🔒</span>
+                </div>
+              </div>
+              <h1 className="text-4xl sm:text-5xl font-black tracking-tight text-white mb-2">
+                SOLS<span className="text-blue-400">APP</span>
+              </h1>
+              <p className="app-subtitle">Biometric Attendance System</p>
+            </div>
 
-        <div className="space-y-4">
-          <div className="group">
-            <input 
-              type="text" 
-              placeholder="System ID" 
-              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-xl text-white focus:border-blue-500 focus:outline-none transition-all"
-              onChange={(e) => setId(e.target.value)} 
-            />
-          </div>
-          
-          <div className="group">
-            <input 
-              type="password" 
-              placeholder="Access Key" 
-              className="w-full bg-slate-900/50 border border-slate-800 p-4 rounded-xl text-white focus:border-blue-500 focus:outline-none transition-all"
-              onChange={(e) => setPass(e.target.value)} 
-            />
+            <div className="space-y-4 sm:space-y-5">
+              <div>
+                <label className="app-label">System ID</label>
+                <input
+                  type="text"
+                  placeholder="e.g. admin / rahul.prof"
+                  className="app-input"
+                  onChange={(e) => setId(e.target.value)}
+                  value={id}
+                  inputMode="text"
+                />
+              </div>
+              
+              <div>
+                <label className="app-label">Access Key</label>
+                <input
+                  type="password"
+                  placeholder="••••••••"
+                  className="app-input"
+                  onChange={(e) => setPass(e.target.value)}
+                  value={pass}
+                />
+              </div>
+
+              <button
+                onClick={handleLogin}
+                disabled={isLoading}
+                className="btn-primary neon-btn mt-2 disabled:opacity-70"
+              >
+                <span className="text-xl">→</span>
+                {isLoading ? "AUTHENTICATING..." : "SIGN IN"}
+              </button>
+            </div>
           </div>
 
-          <button 
-            onClick={handleLogin} 
-            disabled={isLoading}
-            className="w-full bg-blue-600 hover:bg-blue-500 p-4 rounded-xl font-black text-white neon-btn mt-6 flex items-center justify-center gap-2"
-          >
-            {isLoading ? "AUTHENTICATING..." : "AUTHORIZE ACCESS →"}
-          </button>
+          <p className="mt-6 sm:mt-8 text-slate-500 text-[11px] sm:text-xs uppercase tracking-[0.22em] text-center">
+            Secure Terminal // Offline Mode
+          </p>
         </div>
       </div>
-
-      <p className="mt-8 text-slate-600 text-[10px] uppercase tracking-widest">
-        Secure Terminal v2.0 // Ahmedabad Campus
-      </p>
     </div>
   );
 }

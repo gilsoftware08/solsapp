@@ -22,46 +22,53 @@ export default function CreateFacultyLogin() {
   };
 
   return (
-    <div className="p-6 min-h-screen max-w-2xl mx-auto">
-      <Header title="Faculty Credentials" />
-      
-      <div className="glass-card p-6 space-y-6">
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Select Faculty</label>
-          <select 
-            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg outline-none focus:border-pink-500"
-            onChange={(e) => setSelectedFac(e.target.value)}
-            value={selectedFac}
-          >
-            <option value="">-- Choose Name --</option>
-            {facultyList.map((f, i) => <option key={i} value={f.name}>{f.name}</option>)}
-          </select>
-        </div>
+    <div className="app-page">
+      <div className="app-container">
+        <Header title="Faculty Credentials" />
+        
+        <div className="app-card space-y-4 sm:space-y-6">
+          <div>
+            <label className="app-label">Select Faculty</label>
+            <select 
+              className="app-select focus:ring-pink-500/50 focus:border-pink-500/50"
+              onChange={(e) => setSelectedFac(e.target.value)}
+              value={selectedFac}
+            >
+              <option value="">-- Choose Name --</option>
+              {facultyList.map((f, i) => (
+                <option key={i} value={f.name}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Assign User ID</label>
-          <input 
-            placeholder="e.g. rahul.prof" 
-            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg outline-none focus:border-pink-500"
-            value={id}
-            onChange={(e) => setId(e.target.value)} 
-          />
-        </div>
+          <div>
+            <label className="app-label">Assign User ID</label>
+            <input 
+              placeholder="e.g. rahul.prof" 
+              className="app-input focus:ring-pink-500/50 focus:border-pink-500/50"
+              value={id}
+              onChange={(e) => setId(e.target.value)} 
+            />
+          </div>
 
-        <div>
-          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Assign Password</label>
-          <input 
-            type="password" 
-            placeholder="••••••" 
-            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg outline-none focus:border-pink-500"
-            value={pass}
-            onChange={(e) => setPass(e.target.value)} 
-          />
-        </div>
+          <div>
+            <label className="app-label">Assign Password</label>
+            <input 
+              type="password" 
+              placeholder="••••••••" 
+              className="app-input focus:ring-pink-500/50 focus:border-pink-500/50"
+              value={pass}
+              onChange={(e) => setPass(e.target.value)} 
+            />
+          </div>
 
-        <button onClick={saveLogin} className="w-full bg-pink-600 p-5 rounded-xl font-bold text-lg neon-btn mt-2">
-          SAVE CREDENTIALS
-        </button>
+          <button onClick={saveLogin} className="btn neon-btn bg-pink-600 text-white mt-1">
+            <span className="text-xl">💾</span>
+            SAVE CREDENTIALS
+          </button>
+        </div>
       </div>
     </div>
   );

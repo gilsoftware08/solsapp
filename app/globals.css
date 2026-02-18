@@ -1,32 +1,138 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   --foreground-rgb: 255, 255, 255;
   --background-start-rgb: 10, 10, 15;
   --background-end-rgb: 0, 0, 0;
+  color-scheme: dark;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(to bottom, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
+  background:
+    radial-gradient(1200px 800px at 20% 10%, rgba(59, 130, 246, 0.22), transparent 60%),
+    radial-gradient(900px 700px at 90% 20%, rgba(16, 185, 129, 0.16), transparent 55%),
+    linear-gradient(to bottom, rgb(var(--background-start-rgb)), rgb(var(--background-end-rgb)));
   min-height: 100vh;
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 1rem;
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    text-rendering: optimizeLegibility;
+  }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply text-white antialiased overflow-x-hidden;
+    @apply text-[16px] sm:text-[17px] leading-relaxed;
+  }
+
+  :focus-visible {
+    outline: none;
+  }
 }
 
-.neon-btn {
-  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
-  transition: all 0.3s ease;
-}
+@layer components {
+  .app-page {
+    @apply min-h-screen;
+  }
 
-.neon-btn:active {
-  transform: scale(0.95);
-  box-shadow: 0 0 5px rgba(59, 130, 246, 0.8);
+  .app-container {
+    @apply mx-auto w-full max-w-2xl px-4 sm:px-6 py-4 sm:py-6;
+    padding-top: calc(1rem + env(safe-area-inset-top));
+    padding-bottom: calc(1rem + env(safe-area-inset-bottom));
+  }
+
+  .app-title {
+    @apply text-2xl sm:text-3xl font-black tracking-tight;
+  }
+
+  .app-subtitle {
+    @apply text-xs sm:text-sm text-slate-400 uppercase tracking-[0.18em] font-bold;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 1.25rem;
+  }
+
+  .app-card {
+    background: rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 1.25rem;
+    @apply p-5 sm:p-6;
+  }
+
+  .app-label {
+    @apply text-[11px] sm:text-xs font-black text-slate-400 uppercase tracking-[0.18em] mb-2 block;
+  }
+
+  .app-input {
+    @apply w-full rounded-2xl bg-slate-900/60 border border-slate-800;
+    @apply px-4 py-3 sm:py-4 text-base sm:text-lg text-white placeholder:text-slate-500;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/50;
+  }
+
+  .app-select {
+    @apply w-full rounded-2xl bg-slate-900/60 border border-slate-800 appearance-none;
+    @apply px-4 py-3 sm:py-4 text-base sm:text-lg text-white;
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500/60 focus:border-blue-500/50;
+  }
+
+  .btn {
+    @apply inline-flex w-full items-center justify-center gap-2;
+    @apply rounded-2xl px-4 py-3 sm:py-4 font-black text-base sm:text-lg;
+    @apply min-h-12 active:scale-[0.99] transition-transform;
+  }
+
+  .btn-primary {
+    @apply inline-flex w-full items-center justify-center gap-2;
+    @apply rounded-2xl px-4 py-3 sm:py-4 font-black text-base sm:text-lg;
+    @apply min-h-12 active:scale-[0.99] transition-transform;
+    @apply bg-blue-600 text-white;
+  }
+
+  .btn-success {
+    @apply inline-flex w-full items-center justify-center gap-2;
+    @apply rounded-2xl px-4 py-3 sm:py-4 font-black text-base sm:text-lg;
+    @apply min-h-12 active:scale-[0.99] transition-transform;
+    @apply bg-emerald-600 text-white;
+  }
+
+  .btn-warning {
+    @apply inline-flex w-full items-center justify-center gap-2;
+    @apply rounded-2xl px-4 py-3 sm:py-4 font-black text-base sm:text-lg;
+    @apply min-h-12 active:scale-[0.99] transition-transform;
+    @apply bg-orange-600 text-white;
+  }
+
+  .btn-danger {
+    @apply inline-flex w-full items-center justify-center gap-2;
+    @apply rounded-2xl px-4 py-3 sm:py-4 font-black text-base sm:text-lg;
+    @apply min-h-12 active:scale-[0.99] transition-transform;
+    @apply bg-red-900/40 text-red-200 border border-red-900;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center rounded-2xl px-4 py-2;
+    @apply bg-slate-900/50 border border-slate-800 text-slate-200;
+    @apply min-h-11 active:scale-[0.99] transition-transform;
+  }
+
+  .neon-btn {
+    box-shadow: 0 0 18px rgba(59, 130, 246, 0.35);
+    transition: all 0.25s ease;
+  }
+
+  .neon-btn:active {
+    transform: scale(0.99);
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.55);
+  }
 }
