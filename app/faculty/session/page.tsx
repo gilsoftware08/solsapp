@@ -1,97 +1,127 @@
 "use client";
-import { useEffect, useRef, useState } from 'react';
-import * as faceapi from 'face-api.js';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useRef } from "react";
+import * as faceapi from "face-api.js";
+import { useRouter } from "next/navigation";
+import { getStorage, setStorage } from "@/lib/dataStore";
 
-export default function AttendanceSession() {
+export default function FacultySession() {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [status, setStatus] = useState("Loading AI...");
-  const [presentStudents, setPresentStudents] = useState<string[]>([]);
-  const [isSessionActive, setIsSessionActive] = useState(true);
+  const [isVerified, setIsVerified] = useState(false);
+  const [mode, setMode] = useState<"user" | "environment">("user"); // Front/Back camera
+  const [status, setStatus] = useState("Verify Identity to Start");
+  const [timer, setTimer] = useState(0);
+  const [attendanceDone, setAttendanceDone] = useState(false);
+  const [presentCount, setPresentCount] = useState(0);
   const router = useRouter();
 
+  // Load AI Models
   useEffect(() => {
-    const loadModels = async () => {
+    const load = async () => {
       await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
       await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
       await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-      setStatus("System Ready. Scan faces!");
-      startVideo();
+      startCamera();
     };
-    loadModels();
-  }, []);
+    load();
+  }, [mode]);
 
-  const startVideo = () => {
-    navigator.mediaDevices.getUserMedia({ video: {} })
-      .then((stream) => { if (videoRef.current) videoRef.current.srcObject = stream; });
+  // Timer logic
+  useEffect(() => {
+    let interval: any;
+    if (isVerified) {
+      interval = setInterval(() => setTimer(prev => prev + 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [isVerified]);
+
+  const startCamera = () => {
+    navigator.mediaDevices.getUserMedia({ video: { facingMode: mode } })
+      .then(s => { if(videoRef.current) videoRef.current.srcObject = s; });
   };
 
-  const handleScan = async () => {
-    if (!videoRef.current || !isSessionActive) return;
-    setStatus("Recognizing...");
+  const verifyFaculty = async () => {
+    const detect = await faceapi.detectSingleFace(videoRef.current!, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+    if (!detect) return setStatus("Face not seen! ⚠️");
 
-    const detection = await faceapi.detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-      .withFaceLandmarks().withFaceDescriptor();
+    const facultyName = localStorage.getItem("currentFaculty");
+    const allFaculty = getStorage("faculty");
+    const myData = allFaculty.find((f: any) => f.name === facultyName);
 
-    if (detection) {
-      const savedUsers = JSON.parse(localStorage.getItem('registered_users') || '[]');
-      let match: string | null = null;
-
-      savedUsers.forEach((user: { name: string; descriptor: number[] }) => {
-        // Use face-api to calculate if the faces are similar
-        const distance = faceapi.euclideanDistance(detection.descriptor, user.descriptor);
-        if (distance < 0.6) match = user.name;
-      });
-
-      if (match) {
-        const studentName = match as string;
-        if (!presentStudents.includes(studentName)) {
-          setPresentStudents((prev) => [...prev, studentName]);
-          setStatus(`Attendance Marked: ${studentName}! ✅`);
-        } else {
-          setStatus(`${studentName} is already marked!`);
-        }
-      } else {
-        // This now correctly runs if 'match' is null
-        setStatus("Unknown Face! ❌");
-      }
+    const distance = faceapi.euclideanDistance(detect.descriptor, myData.descriptor);
+    if (distance < 0.6) {
+      setIsVerified(true);
+      setStatus("Class Active");
     } else {
-      setStatus("No face detected! ⚠️");
+      setStatus("Verification Failed! ❌");
     }
   };
 
-  const endSession = () => {
-    setIsSessionActive(false);
-    // Save the final list of this session to history
-    const history = JSON.parse(localStorage.getItem('attendance_history') || '[]');
+  const takeAttendance = () => {
+    // Navigate to a dedicated scanning sub-page or open overlay
+    router.push("/faculty/session/scan");
+  };
+
+  const endClass = () => {
+    const activeBatch = JSON.parse(localStorage.getItem("activeBatch") || "{}");
+    const history = getStorage("attendance_history");
     history.push({
+      batch: activeBatch.name,
+      duration: `${Math.floor(timer / 60)} mins`,
       date: new Date().toLocaleString(),
-      faculty: localStorage.getItem('currentFaculty'),
-      students: presentStudents
+      studentsPresent: presentCount
     });
-    localStorage.setItem('attendance_history', JSON.stringify(history));
-    alert("Session ended and saved!");
-    router.push("/faculty");
+    setStorage("attendance_history", history);
+    router.push("/faculty/dashboard");
+  };
+
+  const formatTime = (s: number) => {
+    const mins = Math.floor(s / 60);
+    const secs = s % 60;
+    return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
   };
 
   return (
-    <div className="flex flex-col items-center p-4 bg-slate-900 min-h-screen text-white">
-      <h1 className="text-xl font-bold mb-4">Live Attendance</h1>
-      <video ref={videoRef} autoPlay muted className="w-full rounded-xl border-4 border-blue-500 mb-4" />
-
-      <p className="bg-slate-800 p-3 rounded-lg w-full text-center mb-4">{status}</p>
-
-      <div className="grid grid-cols-2 gap-4 w-full mb-6">
-        <button onClick={handleScan} className="bg-green-600 p-4 rounded-xl font-bold">SCAN FACE</button>
-        <button onClick={endSession} className="bg-red-600 p-4 rounded-xl font-bold">END SESSION</button>
+    <div className="p-4 bg-black min-h-screen text-white">
+      {/* Header Info */}
+      <div className="flex justify-between items-center mb-4 px-2">
+        <span className="text-blue-400 font-bold">● LIVE SESSION</span>
+        <span className="font-mono text-xl">{formatTime(timer)}</span>
       </div>
 
-      <div className="w-full">
-        <h3 className="text-slate-400 mb-2">Present Today ({presentStudents.length}):</h3>
-        <div className="bg-slate-800 p-4 rounded-lg min-h-[100px]">
-          {presentStudents.map((s, i) => <div key={i} className="py-1 border-b border-slate-700">{s}</div>)}
+      {/* Modern Camera View */}
+      <div className="relative group">
+        <video ref={videoRef} autoPlay muted className="w-full rounded-3xl border-2 border-slate-800 bg-slate-900" />
+        <button 
+          onClick={() => setMode(mode === "user" ? "environment" : "user")}
+          className="absolute top-4 right-4 bg-white/10 backdrop-blur-md p-2 rounded-full border border-white/20"
+        >
+          🔄
+        </button>
+      </div>
+
+      <p className="text-center my-4 text-slate-400">{status}</p>
+
+      {!isVerified ? (
+        <button onClick={verifyFaculty} className="w-full bg-blue-600 p-4 rounded-2xl font-bold neon-btn">
+          VERIFY MY FACE TO START
+        </button>
+      ) : (
+        <div className="space-y-4">
+          {!attendanceDone ? (
+            <button onClick={takeAttendance} className="w-full bg-emerald-600 p-4 rounded-2xl font-bold neon-btn flex items-center justify-center gap-2">
+              📸 TAKE ATTENDANCE
+            </button>
+          ) : (
+             <div className="bg-emerald-900/30 border border-emerald-500/30 p-4 rounded-2xl text-center">
+                Attendance Captured: {presentCount} Students
+             </div>
+          )}
+          
+          <button onClick={endClass} className="w-full bg-red-600/20 border border-red-600 text-red-600 p-4 rounded-2xl font-bold">
+            END CLASS
+          </button>
         </div>
-      </div>
+      )}
     </div>
   );
 }
