@@ -2,12 +2,14 @@
 import { useState, useEffect, useRef } from "react";
 import * as faceapi from "face-api.js";
 import { getStorage, setStorage } from "@/lib/dataStore";
+import Header from "@/components/Header";
 
 export default function RegisterStudent() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [courses, setCourses] = useState<any[]>([]);
   const [allBatches, setAllBatches] = useState<any[]>([]);
   const [filteredBatches, setFilteredBatches] = useState<any[]>([]);
+  const [status, setStatus] = useState("Initializing Camera...");
   
   const [name, setName] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
@@ -16,11 +18,26 @@ export default function RegisterStudent() {
   useEffect(() => {
     setCourses(getStorage("courses"));
     setAllBatches(getStorage("batches"));
-    faceapi.nets.tinyFaceDetector.loadFromUri('/models');
-    faceapi.nets.faceLandmark68Net.loadFromUri('/models');
-    faceapi.nets.faceRecognitionNet.loadFromUri('/models');
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } }).then(s => { if(videoRef.current) videoRef.current.srcObject = s; });
+    const loadAI = async () => {
+      await faceapi.nets.tinyFaceDetector.loadFromUri('/models');
+      await faceapi.nets.faceLandmark68Net.loadFromUri('/models');
+      await faceapi.nets.faceRecognitionNet.loadFromUri('/models');
+      startCamera();
+    };
+    loadAI();
   }, []);
+
+  const startCamera = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } });
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        setStatus("Ready to Scan");
+      }
+    } catch (e) {
+      setStatus("Camera Denied. Check Permissions.");
+    }
+  };
 
   const handleCourseChange = (courseName: string) => {
     setSelectedCourse(courseName);
@@ -31,7 +48,7 @@ export default function RegisterStudent() {
   const registerStudent = async () => {
     if (!name || !selectedBatch) return alert("Missing info!");
     const detect = await faceapi.detectSingleFace(videoRef.current!, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-    if (!detect) return alert("Face not detected!");
+    if (!detect) return alert("Face not detected! Please ask student to look at camera.");
 
     const students = getStorage("students");
     students.push({
@@ -42,28 +59,48 @@ export default function RegisterStudent() {
     });
     setStorage("students", students);
     alert("Student Registered Successfully!");
+    setName("");
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4 text-orange-400">Student Enrollment</h1>
-      <video ref={videoRef} autoPlay muted className="w-full h-40 object-cover rounded-2xl mb-4 border-2 border-orange-500 shadow-lg shadow-orange-900/20" />
+    <div className="p-6 min-h-screen max-w-2xl mx-auto">
+      <Header title="Enroll Student" />
       
-      <div className="space-y-3">
-        <input placeholder="Student Full Name" className="w-full bg-slate-800 p-3 rounded-lg" onChange={(e) => setName(e.target.value)} />
+      <div className="relative mb-6">
+        <video 
+          ref={videoRef} 
+          autoPlay 
+          muted 
+          playsInline // CRITICAL: Fixes 'Play' button on mobile
+          className="w-full h-64 md:h-80 object-cover rounded-3xl border-2 border-orange-500/50 shadow-2xl shadow-orange-500/20" 
+        />
+        <div className="absolute bottom-4 left-0 right-0 text-center">
+            <span className="bg-black/60 text-orange-300 px-4 py-1 rounded-full text-xs">{status}</span>
+        </div>
+      </div>
+      
+      <div className="glass-card p-6 space-y-4">
+        <input 
+          placeholder="Student Full Name" 
+          className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg focus:border-orange-500 outline-none" 
+          value={name}
+          onChange={(e) => setName(e.target.value)} 
+        />
         
-        <select className="w-full bg-slate-800 p-3 rounded-lg" onChange={(e) => handleCourseChange(e.target.value)}>
-          <option value="">Choose Course</option>
-          {courses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-        </select>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <select className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg outline-none" onChange={(e) => handleCourseChange(e.target.value)}>
+            <option value="">Course</option>
+            {courses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+          </select>
 
-        <select className="w-full bg-slate-800 p-3 rounded-lg" onChange={(e) => setSelectedBatch(e.target.value)} disabled={!selectedCourse}>
-          <option value="">Choose Batch</option>
-          {filteredBatches.map((b, i) => <option key={i} value={b.name}>{b.name}</option>)}
-        </select>
+          <select className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg outline-none" onChange={(e) => setSelectedBatch(e.target.value)} disabled={!selectedCourse}>
+            <option value="">Batch</option>
+            {filteredBatches.map((b, i) => <option key={i} value={b.name}>{b.name}</option>)}
+          </select>
+        </div>
 
-        <button onClick={registerStudent} className="w-full bg-orange-600 p-4 rounded-xl font-bold neon-btn text-lg">
-          ENROLL STUDENT & SCAN FACE
+        <button onClick={registerStudent} className="w-full bg-orange-600 p-5 rounded-xl font-bold text-lg neon-btn mt-2">
+          SAVE STUDENT & FACE
         </button>
       </div>
     </div>

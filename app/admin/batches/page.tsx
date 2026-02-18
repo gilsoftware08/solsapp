@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { getStorage, setStorage } from "@/lib/dataStore";
+import Header from "@/components/Header";
 
 export default function CreateBatch() {
   const [courses, setCourses] = useState<any[]>([]);
@@ -18,7 +19,6 @@ export default function CreateBatch() {
 
   const handleCourseChange = (courseName: string) => {
     setSelectedCourse(courseName);
-    // Only show faculty assigned to this specific course
     const assigned = allFaculty.filter(f => f.assignedCourses.includes(courseName));
     setFilteredFaculty(assigned);
     setSelectedFaculty(""); 
@@ -34,35 +34,45 @@ export default function CreateBatch() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6 text-emerald-400">Batch Setup</h1>
-      <div className="glass-card p-6 space-y-4">
-        <input 
-          placeholder="Batch Name (e.g. Morning_Py_1)" 
-          className="w-full bg-slate-800 p-3 rounded-lg"
-          value={batchName}
-          onChange={(e) => setBatchName(e.target.value)}
-        />
+    <div className="p-6 min-h-screen max-w-2xl mx-auto">
+      <Header title="Batch Setup" />
 
-        <select 
-          className="w-full bg-slate-800 p-3 rounded-lg"
-          onChange={(e) => handleCourseChange(e.target.value)}
-        >
-          <option value="">Select Course</option>
-          {courses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-        </select>
+      <div className="glass-card p-6 space-y-6">
+        <div>
+          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Batch Name</label>
+          <input 
+            placeholder="e.g. Morning_Python_A" 
+            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg focus:border-emerald-500 outline-none"
+            value={batchName}
+            onChange={(e) => setBatchName(e.target.value)}
+          />
+        </div>
 
-        <select 
-          className="w-full bg-slate-800 p-3 rounded-lg"
-          value={selectedFaculty}
-          onChange={(e) => setSelectedFaculty(e.target.value)}
-          disabled={!selectedCourse}
-        >
-          <option value="">Select Faculty</option>
-          {filteredFaculty.map((f, i) => <option key={i} value={f.name}>{f.name}</option>)}
-        </select>
+        <div>
+          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Select Course</label>
+          <select 
+            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg focus:border-emerald-500 outline-none appearance-none"
+            onChange={(e) => handleCourseChange(e.target.value)}
+          >
+            <option value="">-- Choose Course --</option>
+            {courses.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+          </select>
+        </div>
 
-        <button onClick={saveBatch} className="w-full bg-emerald-600 p-4 rounded-xl font-bold neon-btn mt-4">
+        <div>
+          <label className="text-xs font-bold text-slate-500 uppercase mb-2 block">Assign Faculty</label>
+          <select 
+            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl text-lg focus:border-emerald-500 outline-none appearance-none"
+            value={selectedFaculty}
+            onChange={(e) => setSelectedFaculty(e.target.value)}
+            disabled={!selectedCourse}
+          >
+            <option value="">{selectedCourse ? "-- Choose Faculty --" : "Select Course First"}</option>
+            {filteredFaculty.map((f, i) => <option key={i} value={f.name}>{f.name}</option>)}
+          </select>
+        </div>
+
+        <button onClick={saveBatch} className="w-full bg-emerald-600 p-5 rounded-xl font-bold text-lg neon-btn mt-4">
           CREATE BATCH
         </button>
       </div>
