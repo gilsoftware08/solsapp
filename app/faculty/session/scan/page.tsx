@@ -29,8 +29,9 @@ export default function StudentScanner() {
           faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         ]);
         setStatus("Tap camera to start scanning.");
-      } catch (error) {
-        setStatus("AI Error: Unable to load models. Ensure /public/models is bundled.");
+      } catch (error: any) {
+        console.error(error);
+        setStatus(`AI Error: ${error?.message || String(error)}`);
       }
     };
 

@@ -50,9 +50,9 @@ export default function AddFaculty() {
       ]);
       setModelsLoaded(true);
       setStatus("Models ready. Opening camera...");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Face API model load error", error);
-      setStatus("AI Error: Unable to load models. Ensure /public/models is bundled.");
+      setStatus(`AI Error: ${error?.message || String(error)}`);
       throw error;
     } finally {
       setIsLoadingModels(false);

@@ -47,9 +47,9 @@ export default function RegisterStudent() {
       ]);
       setModelsLoaded(true);
       setStatus("Models ready. Open camera.");
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      setStatus("AI Error: Unable to load models. Ensure /public/models is bundled.");
+      setStatus(`AI Error: ${error?.message || String(error)}`);
     } finally {
       setIsLoadingModels(false);
     }

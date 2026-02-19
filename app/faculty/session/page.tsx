@@ -33,8 +33,9 @@ export default function FacultySession() {
           faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
           faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         ]);
-      } catch (error) {
-        setStatus("AI Error: Unable to load models. Ensure /public/models is bundled.");
+      } catch (error: any) {
+        console.error(error);
+        setStatus(`AI Error: ${error?.message || String(error)}`);
         setIsLoading(false);
         return;
       }
