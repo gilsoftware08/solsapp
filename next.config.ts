@@ -1,9 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'export',      // This is required for mobile apps
+  output: 'export',       // Static HTML export for Capacitor (outputs to ./out)
   images: {
-    unoptimized: true,   // Essential for static exports
+    unoptimized: true,    // No Node server; required for static export
   },
 };
 

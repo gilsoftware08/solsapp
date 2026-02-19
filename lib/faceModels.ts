@@ -1,8 +1,5 @@
-/** Use strict origin path so Capacitor resolves /models correctly on deep routes. */
+/** Root-relative path for static export / Capacitor so models resolve from app root. */
 export function getModelBasePath(): string {
-  if (typeof window !== "undefined") {
-    return window.location.origin + "/models";
-  }
   return "/models";
 }
 
