@@ -13,6 +13,12 @@ export default function StudentScanner() {
   const [status, setStatus] = useState("Initializing...");
   const router = useRouter();
 
+  const FACE_MATCH_THRESHOLD = 0.45;
+  const detectorOptions = new faceapi.TinyFaceDetectorOptions({
+    inputSize: 224,
+    scoreThreshold: 0.5,
+  });
+
   useEffect(() => {
     const loadAI = async () => {
       try {
@@ -27,6 +33,19 @@ export default function StudentScanner() {
         setStatus("Error loading AI models. Check /models folder.");
       }
     };
+
+    // restore existing attendance for this session
+    const stored = localStorage.getItem("current_session_attendance");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setPresentList(parsed);
+        }
+      } catch {
+        setPresentList([]);
+      }
+    }
 
     loadAI();
 
@@ -73,31 +92,56 @@ export default function StudentScanner() {
   const scanFace = async () => {
     if (!videoRef.current) return;
     setStatus("Scanning...");
-    
+
     try {
-      const detect = await faceapi.detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
-      
+      const detect = await faceapi
+        .detectSingleFace(videoRef.current, detectorOptions)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
       if (detect) {
-        const activeBatch = JSON.parse(localStorage.getItem("activeBatch") || "{}");
+        const activeBatch = JSON.parse(
+          localStorage.getItem("activeBatch") || "{}"
+        );
         const allStudents = getStorage("students");
-        // Filter students only for this batch
-        const batchStudents = allStudents.filter((s: any) => s.batchName === activeBatch.name);
+        const batchStudents = allStudents.filter(
+          (s: any) => s.batchName === activeBatch.name
+        );
 
-        let matchName = "";
-        batchStudents.forEach((std: any) => {
-          const dist = faceapi.euclideanDistance(detect.descriptor, std.descriptor);
-          if (dist < 0.6) matchName = std.name;
-        });
+        if (batchStudents.length === 0) {
+          setStatus("No students in this batch.");
+          return;
+        }
 
-        if (matchName) {
+        const labeledDescriptors = batchStudents.map(
+          (s: any) =>
+            new faceapi.LabeledFaceDescriptors(s.name, [
+              new Float32Array(s.descriptor),
+            ])
+        );
+        const matcher = new faceapi.FaceMatcher(
+          labeledDescriptors,
+          FACE_MATCH_THRESHOLD
+        );
+        const match = matcher.findBestMatch(detect.descriptor);
+
+        if (match.distance < FACE_MATCH_THRESHOLD) {
+          const matchName = match.label;
           if (!presentList.includes(matchName)) {
-            setPresentList(p => [...p, matchName]);
+            setPresentList((prev) => {
+              const next = [...prev, matchName];
+              localStorage.setItem(
+                "current_session_attendance",
+                JSON.stringify(next)
+              );
+              return next;
+            });
             setStatus(`Marked: ${matchName} ✅`);
           } else {
             setStatus(`${matchName} is already here!`);
           }
         } else {
-          setStatus("Student Not Found in Batch ❌");
+          setStatus("Unknown Face");
         }
       } else {
         setStatus("No Face Detected ⚠️");

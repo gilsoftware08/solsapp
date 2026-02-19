@@ -29,14 +29,24 @@ export default function FacultyDashboard() {
       <div className="app-container">
       <div className="flex justify-between items-center mb-2 sm:mb-4">
         <Header title="My Batches" />
-        <button
-          type="button"
-          onClick={() => router.push("/login")}
-          className="btn-ghost !w-auto px-4 border-red-900/50 text-red-200"
-        >
-          <span className="text-xl">⎋</span>
-          <span className="hidden sm:inline font-black">LOGOUT</span>
-        </button>
+        <div className="flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => router.push("/faculty/history")}
+            className="btn-ghost !w-auto px-3 sm:px-4 border-slate-700 text-slate-200"
+          >
+            <span className="text-xl">📋</span>
+            <span className="hidden sm:inline font-black">HISTORY</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => router.push("/login")}
+            className="btn-ghost !w-auto px-3 sm:px-4 border-red-900/50 text-red-200"
+          >
+            <span className="text-xl">⎋</span>
+            <span className="hidden sm:inline font-black">LOGOUT</span>
+          </button>
+        </div>
       </div>
 
       <div className="space-y-4">
