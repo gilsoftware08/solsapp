@@ -52,7 +52,7 @@ export default function AddFaculty() {
       setStatus("Models ready. Opening camera...");
     } catch (error) {
       console.error("Face API model load error", error);
-      setStatus("Unable to load AI models. Ensure /public/models is bundled.");
+      setStatus("AI Error: Unable to load models. Ensure /public/models is bundled.");
       throw error;
     } finally {
       setIsLoadingModels(false);
@@ -83,11 +83,11 @@ export default function AddFaculty() {
       setStatus("Align face in frame, then tap Capture.");
       setIsScanning(true);
     } catch (error: any) {
-      let message = "Unable to access camera.";
+      let message = "Camera Error: Unable to access camera.";
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-        message = "Permission denied. Enable camera in app settings.";
+        message = "Camera Error: Please allow permissions.";
       } else if (error?.name === "NotFoundError") {
-        message = "No camera device found.";
+        message = "Camera Error: No camera device found.";
       }
       setStatus(message);
       setIsScanning(false);

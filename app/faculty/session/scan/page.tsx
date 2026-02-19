@@ -30,12 +30,12 @@ export default function StudentScanner() {
         ]);
         setStatus("Tap camera to start scanning.");
       } catch (error) {
-        setStatus("Error loading AI models. Check /models folder.");
+        setStatus("AI Error: Unable to load models. Ensure /public/models is bundled.");
       }
     };
 
-    // restore existing attendance for this session
-    const stored = localStorage.getItem("current_session_attendance");
+    // restore existing attendance for this session (client-only)
+    const stored = typeof window !== "undefined" ? localStorage.getItem("current_session_attendance") : null;
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
@@ -79,11 +79,11 @@ export default function StudentScanner() {
 
       setStatus("Ready to scan...");
     } catch (error: any) {
-      let message = "Unable to access camera.";
+      let message = "Camera Error: Unable to access camera.";
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-        message = "Camera permission denied. Enable it in app settings.";
+        message = "Camera Error: Please allow permissions.";
       } else if (error?.name === "NotFoundError") {
-        message = "No camera device found.";
+        message = "Camera Error: No camera device found.";
       }
       setStatus(message);
     }

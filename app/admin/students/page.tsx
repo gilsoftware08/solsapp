@@ -49,7 +49,7 @@ export default function RegisterStudent() {
       setStatus("Models ready. Open camera.");
     } catch (error) {
       console.error(error);
-      setStatus("Error loading AI models. Check /models folder.");
+      setStatus("AI Error: Unable to load models. Ensure /public/models is bundled.");
     } finally {
       setIsLoadingModels(false);
     }
@@ -79,11 +79,11 @@ export default function RegisterStudent() {
       setIsCameraOpen(true);
       setStatus("Align student face, then capture.");
     } catch (error: any) {
-      let message = "Unable to access camera.";
+      let message = "Camera Error: Unable to access camera.";
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-        message = "Camera denied. Enable permissions in app settings.";
+        message = "Camera Error: Please allow permissions.";
       } else if (error?.name === "NotFoundError") {
-        message = "No camera device found.";
+        message = "Camera Error: No camera device found.";
       }
       setStatus(message);
       setIsCameraOpen(false);

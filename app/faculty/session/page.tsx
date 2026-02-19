@@ -23,7 +23,7 @@ export default function FacultySession() {
     scoreThreshold: 0.5,
   });
 
-  // Initial mount: load models and restore session state
+  // Initial mount: load AI models (separate try/catch), then restore session state
   useEffect(() => {
     const init = async () => {
       try {
@@ -33,12 +33,16 @@ export default function FacultySession() {
           faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
           faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL),
         ]);
+      } catch (error) {
+        setStatus("AI Error: Unable to load models. Ensure /public/models is bundled.");
+        setIsLoading(false);
+        return;
+      }
 
-        const isActive = localStorage.getItem("isSessionActive") === "true";
-        const sessionStart = localStorage.getItem("sessionStartTime");
-        const attendanceRaw = localStorage.getItem(
-          "current_session_attendance"
-        );
+      try {
+        const isActive = typeof window !== "undefined" && localStorage.getItem("isSessionActive") === "true";
+        const sessionStart = typeof window !== "undefined" ? localStorage.getItem("sessionStartTime") : null;
+        const attendanceRaw = typeof window !== "undefined" ? localStorage.getItem("current_session_attendance") : null;
         if (attendanceRaw) {
           try {
             const parsed = JSON.parse(attendanceRaw);
@@ -55,20 +59,18 @@ export default function FacultySession() {
         if (isActive && sessionStart) {
           setIsVerified(true);
           setStatus("Session already active. Camera off to save battery.");
-
           const startMs = parseInt(sessionStart, 10);
-          const diffSec = Math.max(
-            0,
-            Math.floor((Date.now() - startMs) / 1000)
-          );
+          const diffSec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
           setTimer(diffSec);
         } else {
           setIsVerified(false);
           setStatus("Tap the video area to open camera.");
           setTimer(0);
         }
-      } catch (error) {
-        setStatus("Error loading AI models. Check /models folder.");
+      } catch {
+        setPresentCount(0);
+        setTimer(0);
+        setStatus("Tap the video area to open camera.");
       } finally {
         setIsLoading(false);
       }
@@ -125,11 +127,11 @@ export default function FacultySession() {
         setStatus("Align face to verify, then press VERIFY.");
       }
     } catch (error: any) {
-      let message = "Unable to access camera.";
+      let message = "Camera Error: Unable to access camera.";
       if (error?.name === "NotAllowedError" || error?.name === "PermissionDeniedError") {
-        message = "Camera permission denied. Enable it in app settings.";
+        message = "Camera Error: Please allow permissions.";
       } else if (error?.name === "NotFoundError") {
-        message = "No camera device found.";
+        message = "Camera Error: No camera device found.";
       }
       setStatus(message);
     }

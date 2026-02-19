@@ -1,11 +1,8 @@
-export function getModelBasePath() {
+/** Use strict origin path so Capacitor resolves /models correctly on deep routes. */
+export function getModelBasePath(): string {
   if (typeof window !== "undefined") {
-    if (window.location.protocol === "file:") {
-      // Capacitor / static file builds (file://...)
-      return "models";
-    }
+    return window.location.origin + "/models";
   }
-  // Default for dev / web (http://localhost:3000, etc.)
   return "/models";
 }
 
