@@ -7,7 +7,8 @@ export default function CreateBatch() {
   const [courses, setCourses] = useState<any[]>([]);
   const [allFaculty, setAllFaculty] = useState<any[]>([]);
   const [filteredFaculty, setFilteredFaculty] = useState<any[]>([]);
-  
+  const [batches, setBatches] = useState<any[]>([]);
+
   const [batchName, setBatchName] = useState("");
   const [selectedCourse, setSelectedCourse] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState("");
@@ -15,6 +16,7 @@ export default function CreateBatch() {
   useEffect(() => {
     setCourses(getStorage("courses"));
     setAllFaculty(getStorage("faculty"));
+    setBatches(getStorage("batches"));
   }, []);
 
   const handleCourseChange = (courseName: string) => {
@@ -26,9 +28,12 @@ export default function CreateBatch() {
 
   const saveBatch = () => {
     if (!batchName || !selectedCourse || !selectedFaculty) return alert("Fill all fields!");
-    const batches = getStorage("batches");
-    batches.push({ name: batchName, courseName: selectedCourse, facultyName: selectedFaculty });
-    setStorage("batches", batches);
+    const next = [
+      ...batches,
+      { name: batchName, courseName: selectedCourse, facultyName: selectedFaculty },
+    ];
+    setStorage("batches", next);
+    setBatches(next);
     alert("Batch Created!");
     setBatchName("");
   };
@@ -95,10 +100,10 @@ export default function CreateBatch() {
         {/* List of existing batches */}
         <h3 className="app-subtitle mt-6 mb-3 sm:mb-4">Existing Batches</h3>
         <div className="space-y-3">
-          {getStorage("batches").length === 0 ? (
+          {batches.length === 0 ? (
             <p className="text-slate-500 text-sm">No batches created yet.</p>
           ) : (
-            getStorage("batches").map((b: any, idx: number) => (
+            batches.map((b: any, idx: number) => (
               <div
                 key={`${b.name}-${idx}`}
                 className="glass-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
@@ -115,12 +120,12 @@ export default function CreateBatch() {
                 <button
                   type="button"
                   onClick={() => {
-                    const all = getStorage("batches");
-                    const filtered = all.filter(
+                    const filtered = batches.filter(
                       (x: any, i: number) =>
                         !(x.name === b.name && x.courseName === b.courseName && i === idx)
                     );
                     setStorage("batches", filtered);
+                    setBatches(filtered);
                     alert("Batch deleted.");
                   }}
                   className="btn-ghost !w-auto px-4 border-red-900/60 text-red-300"

@@ -1,5 +1,20 @@
-export const getStorage = (key: string) => JSON.parse(localStorage.getItem(key) || '[]');
-export const setStorage = (key: string, data: any) => localStorage.setItem(key, JSON.stringify(data));
+export const getStorage = (key: string): any => {
+  if (typeof window === "undefined") return [];
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+};
+export const setStorage = (key: string, data: any): void => {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // ignore
+  }
+};
 
 export interface Course { name: string; id: string; active?: boolean; }
 export interface Faculty {
